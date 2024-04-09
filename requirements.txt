@@ -1,0 +1,7 @@
+chromedriver-autoinstaller
+ipykernel
+pip-chill
+pysocks
+requests
+selenium
+tqdm
