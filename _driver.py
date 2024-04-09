@@ -34,9 +34,9 @@ def set_chrome_options(debug=False):
     for e in args:
         chrome_options.add_argument(e)
 
-    chrome_prefs = {"profile.managed_default_content_settings.images": 2}
-    chrome_options.experimental_options["prefs"] = chrome_prefs
-    chrome_prefs["profile.default_content_settings"] = {"images": 2}
+    # chrome_prefs = {"profile.managed_default_content_settings.images": 2}
+    # chrome_prefs["profile.default_content_settings"] = {"images": 2}
+    # chrome_options.experimental_options["prefs"] = chrome_prefs
     chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
     return chrome_options
 

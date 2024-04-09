@@ -3,6 +3,8 @@
         "autoinstaller",
         "chromedriver",
         "infobars",
+        "pdfs",
+        "pickfiles",
         "prefs",
         "rohnak",
         "tqdm"

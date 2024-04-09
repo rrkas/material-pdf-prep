@@ -1,3 +1,5 @@
+# https://www.ilovepdf.com/powerpoint_to_pdf
+
 import sys, requests, time
 from pathlib import Path
 from _driver import *
@@ -20,23 +22,22 @@ def convert_ppt2pdf(in_ppt_fp: Path | str, out_pdf_fp: Path | str):
 
     while True:
         time.sleep(2)
-
-        downloadBtn = driver.find_element(By.ID, "pickfiles")
-        downloadUrl = downloadBtn.get_attribute("href")
+        downloadUrl = driver.find_element(By.ID, "pickfiles").get_attribute("href")
 
         if downloadUrl.startswith("http"):
             # print(downloadUrl)
-            with open(out_pdf_fp, "wb") as f:
-                resp = requests.get(downloadUrl)
-                content = resp.content
-                if resp.status_code == 200:
-                    f.write(content)
-                else:
-                    raise RuntimeError(
-                        f"resp.status_code: {resp.status_code} | resp.text: {resp.text}"
-                    )
+            resp = requests.get(downloadUrl)
+            content = resp.content
 
-            return out_pdf_fp
+            if resp.status_code == 200:
+                with open(out_pdf_fp, "wb") as f:
+                    f.write(content)
+
+                return out_pdf_fp
+            else:
+                raise RuntimeError(
+                    f"resp.status_code: {resp.status_code} | resp.text: {resp.text}"
+                )
 
 
 if __name__ == "__main__":
