@@ -4,6 +4,7 @@ import sys, requests, time
 from pathlib import Path
 from tqdm import tqdm
 from _driver import *
+from pypdf import PdfWriter, PdfReader
 
 
 def merge_pdfs(dir_path: Path, out_fp: Path):
@@ -12,33 +13,17 @@ def merge_pdfs(dir_path: Path, out_fp: Path):
     if len(pdf_fps) == 0:
         raise RuntimeError(f"No PDFs found at '{dir_path}'")
 
-    driver = get_driver("https://www.ilovepdf.com/merge_pdf")
+    pdf_fps = sorted(dir_path.glob("**/*.pdf"))
 
-    for fp in tqdm(pdf_fps):
-        file_input_element = driver.find_element(By.TAG_NAME, "input")
-        file_input_element.send_keys(str(fp))
+    writer = PdfWriter()
 
-    driver.find_element(By.ID, "orderByName").click()
-    driver.find_element(By.ID, "processTask").click()
+    for pdf_fp in tqdm(pdf_fps):
+        for page in PdfReader(pdf_fp).pages:
+            writer.add_page(page)
 
-    while True:
-        time.sleep(2)
-        downloadURL = driver.find_element(By.ID, "pickfiles").get_attribute("href")
-
-        if downloadURL.startswith("http"):
-            print(downloadURL)
-            resp = requests.get(downloadURL)
-            content = resp.content
-
-            if resp.status_code == 200:
-                with open(out_fp, "wb") as f:
-                    f.write(content)
-
-                return out_fp
-            else:
-                raise RuntimeError(
-                    f"resp.status_code: {resp.status_code} | resp.text: {resp.text}"
-                )
+    writer.write(out_fp)
+    writer.close()
+    return out_fp
 
 
 if __name__ == "__main__":

@@ -1,0 +1,6 @@
+services:
+  app:
+    build: .
+    command: bash -c "while :; do sleep 10; done"
+    volumes:
+      - .:/app
