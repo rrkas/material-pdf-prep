@@ -1,13 +1,44 @@
-# https://tools.pdf24.org/en/add-page-numbers
-
 import sys, traceback
 from pathlib import Path
-from _driver import *
-import aspose.pdf as pdf
+import fitz
+
+
+def get_text_xy(
+    page: fitz.Page,
+    pos: tuple,
+    margin: float,
+    text: str,
+    font_size: float,
+):
+    v_pos, h_pos = pos
+
+    page_w, page_h = page.rect[2], page.rect[3]
+
+    text_x, text_y = None, None
+    if v_pos == "top":
+        text_y = margin * 2
+    elif v_pos == "center":
+        text_y = page_h / 2 - margin
+    else:
+        text_y = page_h - 2 * margin
+
+    if h_pos == "left":
+        text_x = margin
+    elif h_pos == "center":
+        text_x = (page_w - len(text)) / 2
+    else:
+        text_x = page_w - margin - (len(text) + 5) * 5 * (font_size / 10)
+        # print(text, len(text), text_x, page_w)
+
+    return text_x, text_y
 
 
 def add_page_numbers(
-    pdf_fp: Path, out_fp: Path, position: str = "bottom-right", margin: float = 10
+    pdf_fp: Path,
+    out_fp: Path,
+    position: str = "bottom-right",
+    margin: float = 10,
+    font_size: float = 10,
 ):
     """
     position = top/center/bottom-left/center/right
@@ -27,30 +58,25 @@ def add_page_numbers(
             "/"
         ), f"{h_pos} should be left/center/right"
 
-        doc = pdf.Document(str(pdf_fp))
+        pdf_document: fitz.Document = fitz.open(str(pdf_fp))
 
-        pages = doc.pages
-        len_pages = len(pages)
-        num_width = len(str(len_pages))
+        for page_num in range(len(pdf_document)):
+            page: fitz.Page = pdf_document[page_num]
+            text = f"{page_num + 1} / {len(pdf_document)}"
 
-        for page_idx, page in enumerate(pages):
-            stamp = pdf.TextStamp(
-                f"{str(page_idx+1).rjust(num_width)} / {str(len_pages).rjust(num_width)}"
+            text_x, text_y = get_text_xy(page, (v_pos, h_pos), margin, text, font_size)
+
+            page.insert_text(
+                (text_x, text_y),
+                text,
+                fontsize=font_size,
+                color=(0, 0, 0),
             )
 
-            stamp.vertical_alignment = eval(f"pdf.VerticalAlignment.{v_pos.upper()}")
-            stamp.horizontal_alignment = eval(
-                f"pdf.HorizontalAlignment.{h_pos.upper()}"
-            )
-            if h_pos in "left,right".split(","):
-                exec(f"stamp.{h_pos}_margin = {margin}")
+        # Save the modified PDF to the output file
+        pdf_document.save(str(out_fp))
+        pdf_document.close()
 
-            if v_pos in "top,bottom".split(","):
-                exec(f"stamp.{v_pos}_margin = {margin}")
-
-            page.add_stamp(stamp)
-
-        doc.save(str(out_fp))
         return out_fp
 
     except Exception as e:
@@ -58,12 +84,13 @@ def add_page_numbers(
         traceback.print_exc()
 
 
-def add_text(
+def add_head_foot_text(
     pdf_fp: Path,
     out_fp: Path,
     position: str = "bottom-right",
     text: str = "",
     margin: float = 10,
+    font_size: float = 10,
 ):
     """
     position = top/center/bottom-left/center/right
@@ -83,25 +110,24 @@ def add_text(
             "/"
         ), f"{h_pos} should be left/center/right"
 
-        doc = pdf.Document(str(pdf_fp))
+        pdf_document: fitz.Document = fitz.open(str(pdf_fp))
 
-        pages = doc.pages
+        for page_num in range(len(pdf_document)):
+            page: fitz.Page = pdf_document[page_num]
 
-        for page in pages:
-            stamp = pdf.TextStamp(text)
-            stamp.vertical_alignment = eval(f"pdf.VerticalAlignment.{v_pos.upper()}")
-            stamp.horizontal_alignment = eval(
-                f"pdf.HorizontalAlignment.{h_pos.upper()}"
+            text_x, text_y = get_text_xy(page, (v_pos, h_pos), margin, text, font_size)
+
+            page.insert_text(
+                (text_x, text_y),
+                text,
+                fontsize=font_size,
+                color=(0, 0, 0),
             )
-            if h_pos in "left,right".split(","):
-                exec(f"stamp.{h_pos}_margin = {margin}")
 
-            if v_pos in "top,bottom".split(","):
-                exec(f"stamp.{v_pos}_margin = {margin}")
+        # Save the modified PDF to the output file
+        pdf_document.save(str(out_fp))
+        pdf_document.close()
 
-            page.add_stamp(stamp)
-
-        doc.save(str(out_fp))
         return out_fp
     except Exception as e:
         print(e)
@@ -115,4 +141,4 @@ if __name__ == "__main__":
         add_page_numbers(*args)
 
     elif sys.argv[1] == "text":
-        add_text(*args)
+        add_head_foot_text(*args)

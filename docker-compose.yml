@@ -1,6 +1,8 @@
 services:
   app:
     build: .
+    image: rrka79wal/bits-material-prep:0.0.1
+    container_name: bits-material-prep
     command: bash -c "while :; do sleep 10; done"
     volumes:
       - .:/app

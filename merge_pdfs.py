@@ -1,10 +1,11 @@
-# https://www.ilovepdf.com/merge_pdf
+import warnings
+
+warnings.filterwarnings("ignore")
 
 import sys, requests, time
 from pathlib import Path
 from tqdm import tqdm
-from _driver import *
-from pypdf import PdfWriter, PdfReader
+import fitz
 
 
 def merge_pdfs(dir_path: Path, out_fp: Path):
@@ -15,14 +16,16 @@ def merge_pdfs(dir_path: Path, out_fp: Path):
 
     pdf_fps = sorted(dir_path.glob("**/*.pdf"))
 
-    writer = PdfWriter()
+    pdf_writer = fitz.open()
 
     for pdf_fp in tqdm(pdf_fps):
-        for page in PdfReader(pdf_fp).pages:
-            writer.add_page(page)
+        pdf_reader = fitz.open(pdf_fp)
+        pdf_writer.insert_pdf(pdf_reader)
+        pdf_reader.close()
 
-    writer.write(out_fp)
-    writer.close()
+    pdf_writer.save(out_fp)
+    pdf_writer.close()
+
     return out_fp
 
 

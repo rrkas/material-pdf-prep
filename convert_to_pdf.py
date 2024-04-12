@@ -1,10 +1,6 @@
-# https://www.ilovepdf.com/powerpoint_to_pdf
-
-import sys, requests, time
+import sys, os
 from pathlib import Path
-from _driver import *
 from utils import *
-import platform
 
 
 def convert_to_pdf(in_fp: Path | str, out_fp: Path | str):
@@ -15,7 +11,9 @@ def convert_to_pdf(in_fp: Path | str, out_fp: Path | str):
 
     out_fp = Path(out_fp).resolve()
 
-    os.system(f""" unoconv -f pdf -o "{out_fp}" "{in_fp}" """)
+    os.system(
+        f""" python -W ignore /usr/local/bin/unoconv -f pdf -o "{out_fp}" "{in_fp}" """
+    )
 
     return out_fp
 
